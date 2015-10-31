@@ -1,6 +1,8 @@
-# blockapps-js
+# blockapps-js 
 
-[![Build Status](https://travis-ci.org/blockapps/blockapps-js.svg)](https://travis-ci.org/blockapps/blockapps-js)
+[![BlockApps logo](http://blockapps.net/img/logo_cropped.png)](http://blockapps.net)
+
+[![Join the chat at https://gitter.im/blockapps/blockapps-js](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/blockapps/blockapps-js?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Build Status](https://travis-ci.org/blockapps/blockapps-js.svg)](https://travis-ci.org/blockapps/blockapps-js)
 [![Coverage Status](https://coveralls.io/repos/blockapps/blockapps-js/badge.svg?branch=master&service=github)](https://coveralls.io/github/blockapps/blockapps-js?branch=master)
 
 blockapps-js is a library that exposes a number of functions for
@@ -11,59 +13,72 @@ Javascript code.
 
 ## Contents
 - [Installation](#installation)
-- [BlockApps documentation](#blockapps-docs)
+  - [Browserification](#browserification)
+- [BlockApps documentation](#blockapps-documentation)
 - [Overview](#overview)
   - [Quick Start](#quick-start)
-    - [Query an account's balance](#query-account-balance)
-    - [Send ether between accounts](#send-ether)
-    - [Compile Solidity code](#compile-solidity)
-    - [Create a Solidity contract and read its state](#create-contract)
-    - [Call a Solidity method](#call-solidity-method)
-    - [Call many methods in a single message transaction](#call-many-methods)
-- [API details](#api)
-  - [`ethbase`](#ethbase)
+    - [Query an account's balance](#query-an-accounts-balance)
+    - [Send ether between accounts](#send-ether-between-accounts)
+    - [Compile Solidity code](#compile-solidity-code)
+    - [Create a Solidity contract and read its state](#create-a-solidity-contract-and-read-its-state)
+    - [Call a Solidity method](#call-a-solidity-method)
+    - [Call many methods in a single message transaction](#call-many-methods-in-a-single-message-transaction)
+- [API details](#api-details)
+  - [BlockApps profiles](#blockapps-profiles)
+  - [The `ethbase` submodule](#the-ethbase-submodule)
     - [`Int`](#int)
     - [`Address`](#address)
     - [`Account`](#account)
     - [`Storage`](#storage)
-    - [`Storage.Word`](#storage-word)
+    - [`Storage.Word`](#storageword)
     - [`Transaction`](#transaction)
     - [`Units`](#units)
-  - [`routes`](#routes)
-    - [`solc`](#route-solc)
-    - [`extabi`](#route-extabi)
-    - [`faucet`](#route-faucet)
-    - [`block`](#route-block)
-    - [`blockLast`](#route-blocklast)
-    - [`account`](#route-account)
-    - [`accountAddress`](#route-accountaddress)
-    - [`transaction`](#route-transaction)
-    - [`transactionLast`](#route-transactionlast)
-    - [`storage`](#route-storage)
-    - [`storageAddress`](#route-storageaddress)
-  - [`Solidity`](#route-solidity)
+  - [The `routes` submodule](#the-routes-submodule)
+    - [`solc`](#solccode)
+    - [`extabi`](#extabicode)
+    - [`faucet`](#faucetaddress)
+    - [`block`](#blockblockqueryobj)
+    - [`blockLast`](#blocklastn)
+    - [`account`](#accountaccountqueryobj)
+    - [`accountAddress`](#accountaddressaddress)
+    - [`transaction`](#transactiontransactionqueryobj)
+    - [`transactionLast`](#transactionlastn)
+    - [`submitTransaction`](#submittransactiontxobj)
+    - [`transactionResult`](#transactionresulthash)
+    - [`storage`](#storagestoragequeryobj)
+    - [`storageAddress`](#storageaddressaddress)
+  - [The `Solidity` submodule](#the-solidity-submodule)
     - [Solidity constructor](#solidity-constructor)
-    - [Contract object](#solidity-contract-object)
-    - [Attaching to an existing contract](#solidity-attach)
+    - [Contract object](#contract-object)
+    - [Attaching to an existing contract](#attaching-to-an-existing-contract)
     - [State variables](#state-variables)
     - [Mappings](#mappings)
     - [Functions](#functions)
-  - [`MultiTX`](#multitx)
-    - [Rationale](#multitx-rationale)
+  - [The `MultiTX` submodule](#the-multitx-submodule)
+    - [Rationale](#rationale)
     - [Unsent transactions](#unsent-transactions)
-    - [Calling](#multitx-calling)
-    - [Return value](#multitx-return)
+    - [Calling](#calling)
+    - [Return value](#return-value)
 
-## [Installation](#installation)
+## Installation
 
 `npm install blockapps-js`
 
-## [Documentation](#blockapps-docs)
+### Browserification
+
+Run the script `mkbrowser.sh` in the source directory created by npm
+(e.g. "node_modules/blockapps-js/mkbrowser.sh").  It will create a
+file called `blockapps.js` in the same directory that can be included
+in an HTML file as a script.  The call `require("blockapps-js")` is
+made available by the script to encourage you to write your supporting
+Javascript files in the same style as any Node module.
+
+## BlockApps documentation
 
 Documentation is available at http://blockapps.net/apidocs.  Below is
 the API for this particular module.
 
-## [API Overview](#overview)
+## Overview
 
 All functionality is included in the `blockapps-js` module:
 
@@ -74,6 +89,7 @@ var blockapps = require('blockapps-js');
  *   routes,
  *   query,
  *   polling,
+ *   setProfile,
  *   Solidity
  *   MultiTX
  * }
@@ -83,13 +99,13 @@ The various submodules of blockapps are described in detail below.
 Aside from Address and Int, all the public methods return promises
 (from the bluebird library).
 
-### [Quick start](#quick-start)
+### Quick start
 
 See the `bulkQuery` sample dApp in the `examples/` directory for a
 complete, working example.  Here are some snippets illustrating common
 operations.
 
-#### [Query an account's balance](#query-account-balance)
+#### Query an account's balance
 
 ```js
 var Account = require('blockapps-js').ethbase.Account;
@@ -102,7 +118,7 @@ Account(address).balance.then(function(balance) {
 });
 ```
 
-#### [Send ether between accounts](#send-ether)
+#### Send ether between accounts
 
 ```js
 var ethbase = require('blockapps-js').ethbase
@@ -122,7 +138,7 @@ valueTX.send(privkeyFrom, addressTo).then(function(txResult) {
 });
 ```
 
-#### [Compile Solidity code](#compile-solidity)
+#### Compile Solidity code
 
 ```js
 var Solidity = require('blockapps-js').Solidity
@@ -144,7 +160,7 @@ Solidity(code).then(function(solObj) {
 })
 ```
 
-#### [Create a Solidity contract and read its state](#create-contract)
+#### Create a Solidity contract and read its state
 
 ```js
 var Solidity = require('blockapps-js').Solidity
@@ -158,7 +174,7 @@ Solidity(code).newContract(privkey, {"value": 100}).then(function(contract) {
 });
 ```
 
-#### [Call a Solidity method](#call-solidity-method)
+#### Call a Solidity method
 
 ```js
 var Solidity = require('blockapps-js').Solidity;
@@ -197,7 +213,7 @@ Solidity(code).newContract(privkey).then(function(contract) {
 });
 ```
 
-#### [Call many methods in a single message transaction](#call many methods)
+#### Call many methods in a single message transaction
 
 ```js
 var Solidity = require('blockapps-js').Solidity;
@@ -243,17 +259,42 @@ Solidity(code).newContract(privkey).then(function(contract) {
 });
 ```
 
-## [API details](#api)
+## API details
 
-The `blockapps-js` library has four main submodules.
+### BlockApps profiles
 
-### [The `ethbase` submodule](#ethbase)
+The `blockapps-js` library is designed to connect to any BlockApps
+node.  Depending on the node, different default parameters
+(particularly the polling parameters and gas prices) are appropriate.
+To handle this, the function `blockapps.setProfile` is provided with
+several default profiles.  Its usage is:
+
+```js
+setProfile(<profile name>, <optional version>)
+```
+
+where `<profile name>` is any of the keys of `setProfile.profiles`, currently one of:
+
+ - "hacknet": connects to the sandbox `http://hacknet.blockapps.net` with very
+   permissive defaults.
+   
+ - "ethereum": connects to the live network `http://api.blockapps.net`
+   with reasonable defaults given those of the official Ethereum
+   clients.
+
+The `<optional version>`, if present, must be of the form `n.m`, for
+example, `1.0`, and indicates which version of the BlockApps routes is
+requested.  Currently `1.0` is the only one.
+
+### The `ethbase` submodule
 
 This component provides Javascript support for the basic concepts of
 Ethereum, independent of high-level languages or implementation
 features.
 
-#### [`Int`](#int)
+The following names are member functions of `blockapps.ethbase`:
+
+#### `Int`
 
 The constructor for an abstraction of Ethereum's 32-byte words, which
 are implemented via the `big-integer` library.  The constructor
@@ -263,14 +304,14 @@ performed with the `.plus` (etc.) methods rather than the arithmetic
 operators, which degrade big integers to 8-byte (floating-point)
 Javascript numbers.
 
-#### [`Address`](#address)
+#### `Address`
 
 The constructor for Ethereum "addresses" (20-byte words), which are
 implemented as the Buffer type.  Its argument can be a number, an Int,
 a hex string, or another Buffer, all of which are truncated to 20
 bytes.
 
-#### [`Account`](#account)
+#### `Account`
 
 This constructor accepts an argument convertible to Address and
 defines an object with three properties.
@@ -285,7 +326,7 @@ defines an object with three properties.
      this property is a Promise resolving to the Int value of the
      balance.  Note that 1 ether is equal to 1e18 wei.
 
-#### [`Storage`](#storage)
+#### `Storage`
 
 The constructor for the key-value storage associated with an address.
 It accepts an argument convertible to address and returns an object
@@ -299,13 +340,13 @@ with the following methods:
      beginning at `start` (hex string) in a single contiguous Buffer.
      It returns a Promise resolving to this Buffer.
 
-##### [`Storage.Word`](#storage-word)
+##### `Storage.Word`
 
 A constructor accepting hex strings, numbers, or Ints and encoding
 them into 32-byte Buffers.  It throws an exception if the input is too
 long.
 
-#### [`Transaction`](#transaction)
+#### `Transaction`
 
 The constructor for Ethereum transactions.  `blockapps-js` abstracts a
 transaction into two parts:
@@ -326,28 +367,28 @@ transaction into two parts:
       transaction and returns a Promise resolving to the transaction
       result (see the "routes" section).
 
-#### [`Units`](#units)
+#### `Units`
 
 Provides some simple conversions between denominations of ether
 currency.  The interface imitates the `convert-units` Node.js package.
 There are two main functions:
 
-    - `ethValue`: called as `ethValue(x).in(denom)`, produces a
-      numerical-type result (actually a value from the `bignumber.js`
-      package) equal to the number of `wei` in a value of `x` in
-      `denom`.  For example, `ethValue(1).in("ether")` is `1e18` wei.
-      This numerical value can be converted to `Int` and is acceptable
-      as a `value` parameter in a Transaction.
+  - `ethValue`: called as `ethValue(x).in(denom)`, produces a
+    numerical-type result (actually a value from the `bignumber.js`
+    package) equal to the number of `wei` in a value of `x` in
+    `denom`.  For example, `ethValue(1).in("ether")` is `1e18` wei.
+    This numerical value can be converted to `Int` and is acceptable
+    as a `value` parameter in a Transaction.
 
-    - `convertEth`: this converts between two denominations, and is
-      called like `convertEth(x).from(denom1).to(denom2)`.  In
-      particular, `ethValue(x).in(denom)` is the same as
-      `convertEth(x).from(denom).to("wei")`.  It also accepts two
-      arguments, as `convertEth(n,d)`, which is mathematically
-      equivalent to `convertEth(n/d)` (except that `n` and `d` are
-      integral types).
+  - `convertEth`: this converts between two denominations, and is
+    called like `convertEth(x).from(denom1).to(denom2)`.  In
+    particular, `ethValue(x).in(denom)` is the same as
+    `convertEth(x).from(denom).to("wei")`.  It also accepts two
+    arguments, as `convertEth(n,d)`, which is mathematically
+    equivalent to `convertEth(n/d)` (except that `n` and `d` are
+    integral types).
 
-### [The `routes` submodule](#routes)
+### The `routes` submodule
 
 This submodule exports Javascript interfaces to the BlockApps web
 routes for querying the Ethereum "database".  All of them return
@@ -363,9 +404,9 @@ server for their results, with the following parameters:
  - `polling.pollEveryMS`: by default, 500 (milliseconds)
  - `polling.pollTimeoutMS`: by default, 10000 (milliseconds)
 
-The routes are:
+The following "routes" are member functions of `blockapps.routes`:
 
-#### [`solc(code)`](#route-solc)
+#### `solc(code)`
 
 Takes Solidity source code and returns a Promise resolving to an
 object `{vmCode, symTab, name}`, where `vmCode` is the compiled
@@ -375,17 +416,17 @@ Ethereum VM opcodes, `name` is the name of the Solidity contract
 for all state variables and functions in the source.  Normally you
 will not need to use this object.
 
-#### [`extabi(code)`](#route-extabi)
+#### `extabi(code)`
 
 Like `solc`, but returns only the symTab directly.
 
-#### [`faucet(address)`](#route-faucet)
+#### `faucet(address)`
 
 Takes an argument convertible to Address and supplies it with 1000
 ether.  This is available only on the BlockApps hacknet, for obvious
 reasons.
 
-#### [`block`](#route-block)
+#### `block(blockQueryObj)`
 
 Queries the block database, returning a list of Ethereum blocks as
 Javascript objects.  The following queries are allowed, and may be
@@ -405,11 +446,11 @@ combined:
    - *address*: matches any block in which the account at this address is present.
    - *hash*: the block hash
 
-#### [`blockLast(n)`](#route-blocklast)
+#### `blockLast(n)`
 
 Returns the last *n* blocks in the database.
 
-#### [`account(accountQueryObj)`](#route-account)
+#### `account(accountQueryObj)`
 
 Like `routes.block`, but queries accounts.  Its queries are:
 
@@ -417,13 +458,13 @@ Like `routes.block`, but queries accounts.  Its queries are:
    - *nonce*, *minnonce*, *maxnonce*: queries the account nonce
    - *address*: the account address
 
-#### [`accountAddress(address)`](#route-accountaddress)
+#### `accountAddress(address)`
 
 A shortcut to `routes.account({"address" : address})` returning a
 single Ethereum account object (*not* an `ethcore.Account`) rather
 than a list.
 
-#### [`transaction`(transactionQeryObj)](#route-transaction)
+#### `transaction(transactionQueryObj)`
 
 Like `routes.block`, but queries transactions.  Its queries are:
 
@@ -435,26 +476,35 @@ Like `routes.block`, but queries transactions.  Its queries are:
    - *value*, *minvalue*, *maxvalue*: the value sent with the transaction.
    - *blocknumber*: the block number containing this transaction.
 
-#### [`transactionLast(n)`](#route-transactionlast)
+#### `transactionLast(n)`
 
 Returns a list of the last *n* ransactions received by the client
 operating the database.
 
- - `routes.submitTransaction(txObj)`: this is the low-level interface
-   for the `ethcore.Transaction` object.  It accepts an object
-   containing precisely the following fields, and returns a Promise
-   resolving to "transaction result" object with fields summarizing
-   the VM execution.  The Transaction and Solidity objects (below)
-   handle the most useful cases, so when using this route directly,
-   the most important fact about the transaction result is that its
-   presence indicates success.
+#### `submitTransaction(txObj)`
+
+This is the low-level interface for the `ethcore.Transaction` object.
+It accepts an object containing precisely the following fields, and
+returns a Promise resolving to "transaction result" object with fields
+summarizing the VM execution.  The Transaction and Solidity objects
+(below) handle the most useful cases, so when using this route
+directly, the most important fact about the transaction result is that
+its presence indicates success.
 
    - *nonce*, *gasPrice*, *gasLimit*: numbers.
    - *value*: a number encoded in base 10.
    - *codeOrData*, *from*, *to*: hex strings, the latter two addresses.
    - *r*, *s*, *v*, *hash*: cryptographic signature of the other parts.
 
-#### [`storage(storageQueryObj)`](#route-storage)
+#### `transactionResult(hash)`
+
+This takes the hash of a transaction and returns an object containing information about its processing.  Notably, it contains the fields:
+
+  - *message*: either "Success!" or an error
+  - *trace*: the course of its EVM run
+  - *contractsCreated*, *contractsDeleted*: comma-separated lists.
+
+#### `storage(storageQueryObj)`
 
 Like `routes.block`, but queries storage.  It accepts the following
 queries:
@@ -469,18 +519,18 @@ queries:
    - *address*: limits the storage to a particular address.  This is
       virtually required.
 
-#### [`storageAddress(address)`](#route-storageaddress)
+#### `storageAddress(address)`
 
 Gets all storage from *address*.
 
-### [The `Solidity` submodule](#solidity)
+### The `Solidity` submodule
 
-This submodule is the interface to the Solidity language, allowing
-source code to be transformed into Ethereum contracts and these
-contracts' states queried and methods invoked directly from
-Javascript.
+The member `blockapps.Solidity` is the interface to the Solidity
+language, allowing source code to be transformed into Ethereum
+contracts and these contracts' states queried and methods invoked
+directly from Javascript.
 
-#### [Solidity constructor](#solidity-constructor)
+#### Solidity constructor
 
 Invoked as `Solidity(code)`, it is effectively an interface to
 `routes.solc`, returning a Promise of an object with the following
@@ -497,7 +547,7 @@ prototype:
       *required* parameter *privkey*.  This returns the promise of a
       "contract object" described next.
 
-#### [Contract object](#solidity-contract-object)
+#### Contract object
 
 The contract object has as its prototype the Solidity object that
 created it, as well as the following properties:
@@ -509,7 +559,7 @@ created it, as well as the following properties:
       variable at the time the query is made, of the types given
       below.  Mappings and functions have special syntax.
 
-#### [Attaching to an existing contract](#solidity-attach)
+#### Attaching to an existing contract
 
 Finally, it is possible to "attach" some metadata to a Solidity or
 contract object.  This facilitates recording and reloading these
@@ -520,25 +570,25 @@ even recompiling.
 metadata in the argument, creates either a Solidity or contract object
 with this data.  More specifically:
 
-    - If `address` is absent, a Solidity object is returned.  This
-      object is equivalent to `Solidity(code)` with the other
-      properties set to the values in the argument; no check is
-      performed that these values are actually correct.  The only way
-      you should use this is by the equivalent of
-      `Solidity.attach(JSON.stringify(solObj))`, as it avoids
-      recompilation.
+  - If `address` is absent, a Solidity object is returned.  This
+    object is equivalent to `Solidity(code)` with the other properties
+    set to the values in the argument; no check is performed that
+    these values are actually correct.  The only way you should use
+    this is by the equivalent of
+    `Solidity.attach(JSON.stringify(solObj))`, as it avoids
+    recompilation.
 
-    - If `address` is present, a contract object is returned.  This is
-      the same as performing `Solidity(code).newContract(???)`, except
-      that no private key is necessary and the resulting object's
-      `account` member has address equal to `address`.  No check is
-      performed that this address actually exists or has the Solidity
-      ABI indicated by the other parameters.  It simply allows
-      resuming work with a contract object previously created directly
-      by `newContract`. (Note that `JSON.stringify(contractObj)` does
-      not have the correct format to submit to `Solidity.attach`.)
+  - If `address` is present, a contract object is returned.  This is
+    the same as performing `Solidity(code).newContract(???)`, except
+    that no private key is necessary and the resulting object's
+    `account` member has address equal to `address`.  No check is
+    performed that this address actually exists or has the Solidity
+    ABI indicated by the other parameters.  It simply allows resuming
+    work with a contract object previously created directly by
+    `newContract`. (Note that `JSON.stringify(contractObj)` does not
+    have the correct format to submit to `Solidity.attach`.)
 
-#### [State variables](#state-variables)
+#### State variables
 Every Solidity type is given a corresponding Javascript (or Node.js)
 type. They are:
    - *address*: the `ethcore.Address` (i.e. Buffer) type, of length 20 bytes.
@@ -554,7 +604,7 @@ type. They are:
      names of the fields of the struct, with values equal to the
      representations of the struct fields.
 
-#### [Mappings](#mappings)
+#### Mappings
 These are treated specially in two ways.  First, naturally, a key must
 be supplied and the corresponding value returned.  Second, a Solidity
 mapping has no global knowledge of its contents, and thus, the entire
@@ -569,7 +619,7 @@ and return value:
       mapping key (i.e. hex strings for Addresses).
    - *return value*: a Promise resolving to that value.
 
-#### [Functions](#functions)
+#### Functions
 A Solidity function `fName` appears as `state.fName` in the
 corresponding contract object.  This is actually a member function
 that takes the arguments of `fName`, either as:
@@ -600,17 +650,18 @@ Thus, one calls a solidity function as
 contractObj.state.fName(args|arg1, arg2, ..)[   .txParams(params)].callFrom(privkey);
 ```
 
-### [The `MultiTX` submodule](#multitx)
-This submodule makes use of a contract (currently only available on
-hacknet.blockapps.net) that sequentially executes a list of
-transactions in a single message call.
+### The `MultiTX` submodule
 
-#### [Rationale](#multitx-rationale)
+The member function `blockapps.MultiTX` makes use of a contract
+(currently only available on hacknet.blockapps.net) that sequentially
+executes a list of transactions in a single message call.
+
+#### Rationale
 
 This function has several advantages over sending transactions
 individually in series:
 
- 1. The overhead for a single Ethereum message call is 21,000 gas
+ - The overhead for a single Ethereum message call is 21,000 gas
    before the VM even begins execution.  This cost is *not* incurred
    for CALL opcodes within an existing execution environment, though,
    so enormous gas savings are possible if several transactions are
@@ -621,7 +672,7 @@ individually in series:
    since the CREATE opcode is even more expensive (32,000 gas).
    However, the following benefit may compensate even for this.
 
- 2. A valid transaction must contain the current nonce of the sender,
+ - A valid transaction must contain the current nonce of the sender,
    and if successful, increments that nonce.  Thus, each transaction
    in a sequence must wait for confirmation of the success of the
    previous one before it can be sent with any hope of acceptance.
@@ -629,12 +680,12 @@ individually in series:
    therefore only needs to query the nonce once, so there is no delay
    in executing the latter members of the sequence.
 
- 3. Similarly, if one wishes to make a series of related transactions
+ - Similarly, if one wishes to make a series of related transactions
    each depending on the outcome of the earlier ones, then they have
    to be sent in strict sequence.  MultiTX respects the sequencing of
    its arguments, but compresses the time frame for execution.
 
-#### [Unsent transactions](#unsent-transactions)
+#### Unsent transactions
 
 The `MultiTX` function takes one argument, a Javascript array of
 "unsent transactions".  An unsent transaction can be either:
@@ -649,12 +700,12 @@ The `MultiTX` function takes one argument, a Javascript array of
    with a subsequent `txParams` call, where `contract` is any Solidity
    contract object as described previously.
 
-#### [Calling](#multitx-calling)
+#### Calling
 
 The complete syntax of a call to MultiTX is:
 ```js
 MultiTX([<unsent-tx-1>, <unsent-tx-2> ..])
-.txParams({"gasPrice": <price in wei>, "gasLimit: <limit in gas units>})
+.txParams({"gasPrice": <price in wei>, "gasLimit": <limit in gas units>})
 .multiSend(<private key of sender>);
 ```
 
@@ -677,7 +728,7 @@ automatically added on.  It is still possible for a transaction to
 fail if the value you gave it is rejected by the contract
 on-blockchain.
 
-#### [Return value](#multitx-return)
+#### Return value
 
 A call to MultiTX returns the Promise of a list of return values, one
 for each transaction.  If the return type is unknown (as for a bare
